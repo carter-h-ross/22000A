@@ -1,0 +1,337 @@
+#region VEXcode Generated Robot Configuration
+from vex import *
+import urandom
+
+# Brain should be defined by default
+brain=Brain()
+
+# Robot configuration code
+controller_1 = Controller(PRIMARY)
+RHS_motor_a = Motor(Ports.PORT9, GearSetting.RATIO_6_1, False)
+RHS_motor_b = Motor(Ports.PORT10, GearSetting.RATIO_6_1, False)
+RHS = MotorGroup(RHS_motor_a, RHS_motor_b)
+LHS_motor_a = Motor(Ports.PORT1, GearSetting.RATIO_6_1, True)
+LHS_motor_b = Motor(Ports.PORT2, GearSetting.RATIO_6_1, True)
+LHS = MotorGroup(LHS_motor_a, LHS_motor_b)
+leftWing = DigitalOut(brain.three_wire_port.g)
+lift = DigitalOut(brain.three_wire_port.a)
+Intake_motor_a = Motor(Ports.PORT5, GearSetting.RATIO_6_1, False)
+Intake_motor_b = Motor(Ports.PORT6, GearSetting.RATIO_6_1, True)
+Intake = MotorGroup(Intake_motor_a, Intake_motor_b)
+RTop = Motor(Ports.PORT8, GearSetting.RATIO_6_1, True)
+LTop = Motor(Ports.PORT3, GearSetting.RATIO_6_1, False)
+rightWing = DigitalOut(brain.three_wire_port.h)
+
+
+# wait for rotation sensor to fully initialize
+wait(30, MSEC)
+
+
+def play_vexcode_sound(sound_name):
+    # Helper to make playing sounds from the V5 in VEXcode easier and
+    # keeps the code cleaner by making it clear what is happening.
+    print("VEXPlaySound:" + sound_name)
+    wait(5, MSEC)
+
+# add a small delay to make sure we don't print in the middle of the REPL header
+wait(200, MSEC)
+# clear the console to make sure we don't have the REPL in the console
+print("\033[2J")
+
+#endregion VEXcode Generated Robot Configuration
+
+vexcode_brain_precision = 0
+vexcode_console_precision = 0
+vexcode_controller_1_precision = 0
+r1Presses = 0
+liftStatus = 0
+autonMode = 0
+leftWingStatus = 0
+rightWingStatus = 0
+start = 0
+minSpeed = 10
+minSpeedDiv = (100 - minSpeed) / 100
+
+inchToDegConstant = 150
+turn180 = 500
+
+def ondriver_drivercontrol_0():
+    global launchOn, intakeForward, intakeBack, shoot, r1Presses, liftStatus, moveCataButtonPress, autonMode, armUpDown, leftWingStatus, rightWingStatus, start, message1, fullDrive, vexcode_brain_precision, vexcode_console_precision, vexcode_controller_1_precision
+    controller_1.buttonA.released(changeLiftState)
+    controller_1.buttonL2.released(changeLeftWingState)
+    controller_1.buttonR2.released(changeRightWingState)
+    RHS.set_stopping(COAST)
+    LHS.set_stopping(COAST)
+    RTop.set_stopping(COAST)
+    LTop.set_stopping(COAST)
+    controller_1.screen.print("minSpeed: ")
+    controller_1.screen.print(minSpeed)
+    start = 0
+    liftStatus = 0
+    rightWingStatus = 0
+    leftWingStatus = 0
+    rightWing.set(False)
+    leftWing.set(False)
+    while True:
+        if controller_1.axis3.position() > 5:
+            LHS.set_velocity((minSpeed + controller_1.axis3.position() * minSpeedDiv), PERCENT)
+            LHS.spin(FORWARD)
+            LTop.set_velocity((minSpeed + controller_1.axis3.position() * minSpeedDiv), PERCENT)
+            LTop.spin(FORWARD)
+        if controller_1.axis2.position() > 5:
+            RHS.set_velocity((minSpeed + controller_1.axis2.position() * minSpeedDiv), PERCENT)
+            RHS.spin(FORWARD)
+            RTop.set_velocity((minSpeed + controller_1.axis2.position() * minSpeedDiv), PERCENT)
+            RTop.spin(FORWARD)
+        if controller_1.axis3.position() < -5:
+            LHS.set_velocity((minSpeed + (0 - controller_1.axis3.position()) * minSpeedDiv), PERCENT)
+            LHS.spin(REVERSE)
+            LTop.set_velocity((minSpeed + (0 - controller_1.axis3.position()) * minSpeedDiv), PERCENT)
+            LTop.spin(REVERSE)
+        if controller_1.axis2.position() < -5:
+            RHS.set_velocity((minSpeed + (0 - controller_1.axis2.position()) * minSpeedDiv), PERCENT)
+            RHS.spin(REVERSE)
+            RTop.set_velocity((minSpeed + (0 - controller_1.axis2.position()) * minSpeedDiv), PERCENT)
+            RTop.spin(REVERSE)
+        if controller_1.axis3.position() > -5 and controller_1.axis3.position() < 5:
+            LHS.stop()
+            LTop.stop()
+        if controller_1.axis2.position() > -5 and controller_1.axis2.position() < 5:
+            RHS.stop()
+            RTop.stop()
+        if controller_1.buttonL1.pressing():
+            Intake.set_velocity(100,PERCENT);
+            Intake.spin(REVERSE);
+        elif controller_1.buttonR1.pressing():
+            Intake.set_velocity(100,PERCENT);
+            Intake.spin(FORWARD);
+        else:
+            Intake.stop()
+            
+        wait(5, MSEC)
+
+# lift
+def changeLiftState():
+    global launchOn, intakeForward, intakeBack, shoot, r1Presses, liftStatus, moveCataButtonPress, autonMode, armUpDown, leftWingStatus, rightWingStatus, start, message1, fullDrive, vexcode_brain_precision, vexcode_console_precision, vexcode_controller_1_precision
+    if liftStatus == 0:
+        lift.set(True)
+        liftStatus = 1
+    else:
+        lift.set(False) 
+        liftStatus = 0
+
+# right wing
+def changeRightWingState():
+    global launchOn, intakeForward, intakeBack, shoot, r1Presses, liftStatus, moveCataButtonPress, autonMode, armUpDown, leftWingStatus, rightWingStatus, start, message1, fullDrive, vexcode_brain_precision, vexcode_console_precision, vexcode_controller_1_precision
+    if rightWingStatus == 0:
+        rightWing.set(True)
+        rightWingStatus = 1
+    else:
+        rightWing.set(False) 
+        rightWingStatus = 0
+
+# left wing
+def changeLeftWingState():
+    global launchOn, intakeForward, intakeBack, shoot, r1Presses, liftStatus, moveCataButtonPress, autonMode, armUpDown, leftWingStatus, rightWingStatus, start, message1, fullDrive, vexcode_brain_precision, vexcode_console_precision, vexcode_controller_1_precision
+    if leftWingStatus == 0:
+        leftWing.set(True)
+        leftWingStatus = 1
+    else:
+        leftWing.set(False) 
+        leftWingStatus = 0
+
+def when_started1():
+    global launchOn, intakeForward, intakeBack, shoot, r1Presses, liftStatus, moveCataButtonPress, autonMode, armUpDown, leftWingStatus, rightWingStatus, start, message1, fullDrive, vexcode_brain_precision, vexcode_console_precision, vexcode_controller_1_precision
+    lift.set(False)
+    leftWing.set(False)
+    rightWing.set(False)
+    RHS.set_velocity(90, PERCENT)
+    RHS.set_max_torque(100, PERCENT)
+    LHS.set_velocity(90, PERCENT)
+    LHS.set_max_torque(100, PERCENT)
+    RTop.set_velocity(90, PERCENT)
+    RTop.set_max_torque(100, PERCENT)
+    LTop.set_velocity(90, PERCENT)
+    LTop.set_max_torque(100, PERCENT)
+    Intake.set_velocity(100, PERCENT)
+    Intake.set_stopping(COAST)
+
+# -------------------- edit auton code here --------------------
+# --------------------------------------------------------------
+# -------------------------------------------------------------- 
+def onauton_autonomous_0():
+    global launchOn, intakeForward, intakeBack, shoot, r1Presses, liftStatus, moveCataButtonPress, autonMode, armUpDown, leftWingStatus, rightWingStatus, start, message1, fullDrive, vexcode_brain_precision, vexcode_console_precision, vexcode_controller_1_precision
+    controller_1.screen.print("|auton|")
+    forwardIn(10)
+    reverse(20)
+    lowerRightWing()
+    lowerLeftWing()
+    turnRight(30)
+    reverse(10)
+    raiseRightWing()
+    turnRight(60)
+    reverse(10)
+    forward(10)
+    raiseLeftWing()
+    turnRight(180)
+    forwardOut(10)
+    turnLeft(70)
+    forwardIn(35)
+    turnRight(130)
+    forwardOut(15)
+    turnLeft(90)
+    forwardIn(20)
+    turnRight(20)
+    lowerLeftWing()
+    lowerRightWing()
+    reverse(40)
+    forward(10)
+    raiseRightWing()
+    raiseLeftWing()
+    turnRight(180)
+    forwardOut(20)
+    controller_1.screen.print("finished|")
+
+def forward(dist, speed=100, w=True):
+    global launchOn, intakeForward, intakeBack, shoot, r1Presses, liftStatus, moveCataButtonPress, autonMode, armUpDown, leftWingStatus, rightWingStatus, start, message1, fullDrive, vexcode_brain_precision, vexcode_console_precision, vexcode_controller_1_precision
+    LHS.set_velocity(speed,PERCENT);
+    LTop.set_velocity(speed,PERCENT);
+    RHS.set_velocity(speed,PERCENT);
+    RTop.set_velocity(speed,PERCENT);
+    LHS.spin_for(FORWARD, inchToDeg(dist), DEGREES, wait=False);
+    LTop.spin_for(FORWARD, inchToDeg(dist), DEGREES, wait=False);
+    RHS.spin_for(FORWARD, inchToDeg(dist), DEGREES, wait=False);
+    RTop.spin_for(FORWARD, inchToDeg(dist), DEGREES, wait=w);
+
+def forwardIn(dist, speed=100, w=True):
+    global launchOn, intakeForward, intakeBack, shoot, r1Presses, liftStatus, moveCataButtonPress, autonMode, armUpDown, leftWingStatus, rightWingStatus, start, message1, fullDrive, vexcode_brain_precision, vexcode_console_precision, vexcode_controller_1_precision
+    LHS.set_velocity(speed,PERCENT);
+    LTop.set_velocity(speed,PERCENT);
+    RHS.set_velocity(speed,PERCENT);
+    RTop.set_velocity(speed,PERCENT);
+    Intake.spin_for(FORWARD, intakeConversion(inchToDeg(dist)), DEGREES, wait=False)
+    LHS.spin_for(FORWARD, inchToDeg(dist), DEGREES, wait=False);
+    LTop.spin_for(FORWARD, inchToDeg(dist), DEGREES, wait=False);
+    RHS.spin_for(FORWARD, inchToDeg(dist), DEGREES, wait=False);
+    RTop.spin_for(FORWARD, inchToDeg(dist), DEGREES, wait=w);
+
+def forwardOut(dist, speed=100, w=True):
+    global launchOn, intakeForward, intakeBack, shoot, r1Presses, liftStatus, moveCataButtonPress, autonMode, armUpDown, leftWingStatus, rightWingStatus, start, message1, fullDrive, vexcode_brain_precision, vexcode_console_precision, vexcode_controller_1_precision
+    LHS.set_velocity(speed,PERCENT);
+    LTop.set_velocity(speed,PERCENT);
+    RHS.set_velocity(speed,PERCENT);
+    RTop.set_velocity(speed,PERCENT);
+    Intake.spin_for(REVERSE, intakeConversion(inchToDeg(dist)), DEGREES, wait=False)
+    LHS.spin_for(FORWARD, inchToDeg(dist), DEGREES, wait=False);
+    LTop.spin_for(FORWARD, inchToDeg(dist), DEGREES, wait=False);
+    RHS.spin_for(FORWARD, inchToDeg(dist), DEGREES, wait=False);
+    RTop.spin_for(FORWARD, inchToDeg(dist), DEGREES, wait=w);
+
+def reverse(dist, speed=100, w=True):
+    global launchOn, intakeForward, intakeBack, shoot, r1Presses, liftStatus, moveCataButtonPress, autonMode, armUpDown, leftWingStatus, rightWingStatus, start, message1, fullDrive, vexcode_brain_precision, vexcode_console_precision, vexcode_controller_1_precision
+    LHS.set_velocity(speed,PERCENT);
+    LTop.set_velocity(speed,PERCENT);
+    RHS.set_velocity(speed,PERCENT);
+    RTop.set_velocity(speed,PERCENT);
+    LHS.spin_for(REVERSE, inchToDeg(dist), DEGREES, wait=False);
+    LTop.spin_for(REVERSE, inchToDeg(dist), DEGREES, wait=False);
+    RHS.spin_for(REVERSE, inchToDeg(dist), DEGREES, wait=False);
+    RTop.spin_for(REVERSE, inchToDeg(dist), DEGREES, wait=w);
+
+def reverseIn(dist, speed=100, w=True):
+    global launchOn, intakeForward, intakeBack, shoot, r1Presses, liftStatus, moveCataButtonPress, autonMode, armUpDown, leftWingStatus, rightWingStatus, start, message1, fullDrive, vexcode_brain_precision, vexcode_console_precision, vexcode_controller_1_precision
+    LHS.set_velocity(speed,PERCENT);
+    LTop.set_velocity(speed,PERCENT);
+    RHS.set_velocity(speed,PERCENT);
+    RTop.set_velocity(speed,PERCENT);
+    Intake.spin_for(FORWARD, intakeConversion(inchToDeg(dist)), DEGREES, wait=False)
+    LHS.spin_for(REVERSE, inchToDeg(dist), DEGREES, wait=False);
+    LTop.spin_for(REVERSE, inchToDeg(dist), DEGREES, wait=False);
+    RHS.spin_for(REVERSE, inchToDeg(dist), DEGREES, wait=False);
+    RTop.spin_for(REVERSE, inchToDeg(dist), DEGREES, wait=w);
+
+def reverseOut(dist, speed=100, w=True):
+    global launchOn, intakeForward, intakeBack, shoot, r1Presses, liftStatus, moveCataButtonPress, autonMode, armUpDown, leftWingStatus, rightWingStatus, start, message1, fullDrive, vexcode_brain_precision, vexcode_console_precision, vexcode_controller_1_precision
+    LHS.set_velocity(speed,PERCENT);
+    LTop.set_velocity(speed,PERCENT);
+    RHS.set_velocity(speed,PERCENT);
+    RTop.set_velocity(speed,PERCENT);
+    Intake.spin_for(REVERSE, intakeConversion(inchToDeg(dist)), DEGREES, wait=False)
+    LHS.spin_for(REVERSE, inchToDeg(dist), DEGREES, wait=False);
+    LTop.spin_for(REVERSE, inchToDeg(dist), DEGREES, wait=False);
+    RHS.spin_for(REVERSE, inchToDeg(dist), DEGREES, wait=False);
+    RTop.spin_for(REVERSE, inchToDeg(dist), DEGREES, wait=w);
+
+def turnRight(dist, speed=100, w=True):
+    global launchOn, intakeForward, intakeBack, shoot, r1Presses, liftStatus, moveCataButtonPress, autonMode, armUpDown, leftWingStatus, rightWingStatus, start, message1, fullDrive, vexcode_brain_precision, vexcode_console_precision, vexcode_controller_1_precision
+    LHS.set_velocity(speed,PERCENT);
+    LTop.set_velocity(speed,PERCENT);
+    RHS.set_velocity(speed,PERCENT);
+    RTop.set_velocity(speed,PERCENT);
+    LHS.spin_for(REVERSE, motorDegToWheelDeg(dist), DEGREES, wait=False);
+    LTop.spin_for(REVERSE, motorDegToWheelDeg(dist), DEGREES, wait=False);
+    RHS.spin_for(FORWARD, motorDegToWheelDeg(dist), DEGREES, wait=False);
+    RTop.spin_for(FORWARD, motorDegToWheelDeg(dist), DEGREES, wait=w);
+
+def turnLeft(dist, speed=100, w=True):
+    global launchOn, intakeForward, intakeBack, shoot, r1Presses, liftStatus, moveCataButtonPress, autonMode, armUpDown, leftWingStatus, rightWingStatus, start, message1, fullDrive, vexcode_brain_precision, vexcode_console_precision, vexcode_controller_1_precision
+    LHS.set_velocity(speed,PERCENT);
+    LTop.set_velocity(speed,PERCENT);
+    RHS.set_velocity(speed,PERCENT);
+    RTop.set_velocity(speed,PERCENT);
+    LHS.spin_for(FORWARD, motorDegToWheelDeg(dist), DEGREES, wait=False);
+    LTop.spin_for(FORWARD, motorDegToWheelDeg(dist), DEGREES, wait=False);
+    RHS.spin_for(REVERSE, motorDegToWheelDeg(dist), DEGREES, wait=False);
+    RTop.spin_for(REVERSE, motorDegToWheelDeg(dist), DEGREES, wait=w);
+
+# create a function for handling the starting and stopping of all autonomous tasks
+def vexcode_auton_function():
+    # Start the autonomous control tasks
+    auton_task_0 = Thread( onauton_autonomous_0 )
+    # wait for the driver control period to end
+    while( competition.is_autonomous() and competition.is_enabled() ):
+        # wait 10 milliseconds before checking again
+        wait( 10, MSEC )
+    # Stop the autonomous control tasks
+    auton_task_0.stop()
+
+def vexcode_driver_function():
+    # Start the driver control tasks
+    driver_control_task_0 = Thread( ondriver_drivercontrol_0 )
+
+    # wait for the driver control period to end
+    while( competition.is_driver_control() and competition.is_enabled() ):
+        # wait 10 milliseconds before checking again
+        wait( 10, MSEC )
+    # Stop the driver control tasks
+    driver_control_task_0.stop()
+
+def inchToDeg(val):
+    return val * inchToDegConstant
+
+def motorDegToWheelDeg(val):
+    return round((val * turn180) / 180 )
+
+def intakeConversion(val):
+    return val 
+
+def lowerRightWing():
+    rightWing.set(True)
+
+def raiseRightWing():
+    rightWing.set(False)
+
+def lowerLeftWing():
+    leftWing.set(True)
+
+def raiseLeftWing():
+    leftWing.set(False)
+
+# register the competition functions
+competition = Competition( vexcode_driver_function, vexcode_auton_function )
+
+# system event handlers
+# add 15ms delay to make sure events are registered correctly.
+wait(15, MSEC)
+
+when_started1()
