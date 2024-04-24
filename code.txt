@@ -51,9 +51,16 @@ rightWingStatus = 0
 start = 0
 minSpeed = 10
 minSpeedDiv = (100 - minSpeed) / 100
+auton = "6ball"
 
-inchToDegConstant = 150
-turn180 = 500
+inchToDegConstant = 60
+turn180 = 1025
+
+def setCoast():
+    LHS.set_stopping(COAST);
+    LTop.set_stopping(COAST);
+    RHS.set_stopping(COAST);
+    RTop.set_stopping(COAST);
 
 def ondriver_drivercontrol_0():
     global launchOn, intakeForward, intakeBack, shoot, r1Presses, liftStatus, moveCataButtonPress, autonMode, armUpDown, leftWingStatus, rightWingStatus, start, message1, fullDrive, vexcode_brain_precision, vexcode_console_precision, vexcode_controller_1_precision
@@ -142,7 +149,6 @@ def changeLeftWingState():
 
 def when_started1():
     global launchOn, intakeForward, intakeBack, shoot, r1Presses, liftStatus, moveCataButtonPress, autonMode, armUpDown, leftWingStatus, rightWingStatus, start, message1, fullDrive, vexcode_brain_precision, vexcode_console_precision, vexcode_controller_1_precision
-    lift.set(False)
     leftWing.set(False)
     rightWing.set(False)
     RHS.set_velocity(90, PERCENT)
@@ -161,36 +167,89 @@ def when_started1():
 # -------------------------------------------------------------- 
 def onauton_autonomous_0():
     global launchOn, intakeForward, intakeBack, shoot, r1Presses, liftStatus, moveCataButtonPress, autonMode, armUpDown, leftWingStatus, rightWingStatus, start, message1, fullDrive, vexcode_brain_precision, vexcode_console_precision, vexcode_controller_1_precision
-    controller_1.screen.print("|auton|")
-    forwardIn(10)
-    reverse(20)
-    lowerRightWing()
-    lowerLeftWing()
-    turnRight(30)
-    reverse(10)
-    raiseRightWing()
-    turnRight(60)
-    reverse(10)
-    forward(10)
-    raiseLeftWing()
-    turnRight(180)
-    forwardOut(10)
-    turnLeft(70)
-    forwardIn(35)
-    turnRight(130)
-    forwardOut(15)
-    turnLeft(90)
-    forwardIn(20)
-    turnRight(20)
-    lowerLeftWing()
-    lowerRightWing()
-    reverse(40)
-    forward(10)
-    raiseRightWing()
-    raiseLeftWing()
-    turnRight(180)
-    forwardOut(20)
-    controller_1.screen.print("finished|")
+    if auton == "6ball":
+        autonSpeed = 80
+        controller_1.screen.print("|auton|")
+        forwardIn(32, autonSpeed)
+        wait(0.2, SECONDS)
+        reverseIn(33, autonSpeed)
+        wait(0.2, SECONDS)
+        turnRight(46, autonSpeed)
+        lowerLeftWing()
+        reverse(16, 30)
+        turnRight(40, 30) # turning to face the goal and knock corner ball out
+        raiseLeftWing()
+        turnLeft(10)
+        wait(0.2, SECONDS)
+        reverse(17, autonSpeed) # push into right-side goal
+        wait(0.1, SECONDS)
+        forward(12, autonSpeed) # move away from goal
+        wait(0.6, SECONDS)
+        turnRight(175, autonSpeed) # turn around to drop intaked triball
+        Intake.spin_for(REVERSE,1000,DEGREES,wait=True)
+        wait(0.2, SECONDS)
+        turnRight(170, autonSpeed) # turn around to push into right side
+        wait(0.1, SECONDS)
+        reverse(14, autonSpeed) # push into right side
+        wait(0.2, SECONDS)
+        forward(12, autonSpeed)
+        wait(0.5, SECONDS)
+        reverse(13, autonSpeed)
+        """
+        turnLeft(100, autonSpeed) # turn away from goal
+        wait(0.3, SECONDS)
+        reverse(10, autonSpeed) # align the bot with the back right wall
+        setCoast()
+        forward(25, autonSpeed) # move away from back right wall
+        wait(0.1, SECONDS)
+        turnLeft(35, autonSpeed) # turn to pick up first triball
+        wait(0.1, SECONDS)
+        forwardIn(35, autonSpeed) # pick up first triball
+        Intake.spin_for(FORWARD,1000,DEGREES,wait=True)
+        wait(0.1, SECONDS)
+        reverse(2) # move away from bar
+        turnLeft(90, autonSpeed)
+        wait(0.2, SECONDS)
+        forward(15, autonSpeed)
+        wait(0.5, SECONDS)
+        turnRight(90, autonSpeed)
+        lowerLeftWing()
+        lowerRightWing()
+        reverse(20, autonSpeed)
+        wait(0.2, SECONDS)
+        raiseLeftWing()
+        raiseRightWing()
+        turnLeft(180, autonSpeed) # turn to face goal
+        Intake.spin_for(REVERSE,1000,DEGREES,wait=True)
+        forward(20, 100)
+        """
+        controller_1.screen.print("finished|")
+    elif auton == "test":
+        turnRight(180)
+    elif auton == "2_ball_near+bar":
+        autonSpeed = 70
+        reverse(40, autonSpeed) # score color triball
+        wait(0.2, SECONDS)
+        forward(3) # move away from goal to turn
+        wait(0.5, SECONDS)
+        turnRight(180, autonSpeed) # turn around
+        reverse(15) # get close to bar
+        wait(0.2, SECONDS)
+        turnRight(45) # turn to face triball to descore
+        lowerLeftWing()
+        reverse(15, 30) # descore triball
+        raiseLeftWing()
+        wait(0.5, SECONDS)
+        turnLeft(45) # turn to face hang bar
+        wait(0.5, SECONDS)
+        reverse(20) # move to hang bar
+        wait(0.5, SECONDS)
+        turnRight(180)
+        wait(0.5, SECONDS)
+        reverse(20)
+
+    else: 
+        pass
 
 def forward(dist, speed=100, w=True):
     global launchOn, intakeForward, intakeBack, shoot, r1Presses, liftStatus, moveCataButtonPress, autonMode, armUpDown, leftWingStatus, rightWingStatus, start, message1, fullDrive, vexcode_brain_precision, vexcode_console_precision, vexcode_controller_1_precision
@@ -275,6 +334,7 @@ def turnRight(dist, speed=100, w=True):
 
 def turnLeft(dist, speed=100, w=True):
     global launchOn, intakeForward, intakeBack, shoot, r1Presses, liftStatus, moveCataButtonPress, autonMode, armUpDown, leftWingStatus, rightWingStatus, start, message1, fullDrive, vexcode_brain_precision, vexcode_console_precision, vexcode_controller_1_precision
+    controller_1.screen.print("VEXcode")    
     LHS.set_velocity(speed,PERCENT);
     LTop.set_velocity(speed,PERCENT);
     RHS.set_velocity(speed,PERCENT);
